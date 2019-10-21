@@ -14,7 +14,7 @@ class genericFIR[T<:Data:Ring](genIn: => T, genOut: => T, numCoeffs: Int) extend
   val io = IO(new Bundle {
   	val inputVal = Input(genIn)
   	val coeffs = Input(Vec(numCoeff, genIn))
-  	val outputVal = Input(genOut)
+  	val outputVal = Output(genOut)
   })
   // Construct a vector of genericFIRDirectCells
   val DirectCells = Vec(Seq.fill(numCoeffs){ Module(new genericFIRDirectCell(genIn, genOut)).io })
@@ -26,7 +26,9 @@ class genericFIR[T<:Data:Ring](genIn: => T, genOut: => T, numCoeffs: Int) extend
   	if (i != numCoeffs - 1) {
   		DirectCells(i+1).carryIn := DirectCells(i).carryOut // connect carryout to carryin chain
   		DirectCells(i+1).inputVal := DirectCells(i).outputVal // pass delayed signal
-  	}
+  	} else {
+      io.outputVal = DirectCells(i).carryOut
+    }
   }  
 }
 
@@ -38,7 +40,7 @@ class genericFIR[T<:Data:Ring](genIn: => T, genOut: => T, numCoeffs: Int) extend
 //	            |
 //	 carryIn --[+]---------- carryOut
 //
-class genericFIRDirectCell[T<:Data:Ring)(genIn: => T, genOut: => T) extends Module {
+class genericFIRDirectCell[T<:Data:Ring)(genIn: => T, genOut: => T] extends Module {
 	val io = IO(new Bundle {
 		val inputVal = Input(genIn) 	// value passed in
 		val coeff = Inout(genIn)		// coefficient of this transpose stage
