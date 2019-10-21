@@ -40,7 +40,7 @@ class genericFIR[T<:Data:Ring](genIn: => T, genOut: => T, numCoeffs: Int) extend
 //	            |
 //	 carryIn --[+]---------- carryOut
 //
-class genericFIRDirectCell[T<:Data:Ring)(genIn: => T, genOut: => T] extends Module {
+class genericFIRDirectCell[T<:Data:Ring](genIn: => T, genOut: => T) extends Module {
 	val io = IO(new Bundle {
 		val inputVal = Input(genIn) 	// value passed in
 		val coeff = Inout(genIn)		// coefficient of this transpose stage
