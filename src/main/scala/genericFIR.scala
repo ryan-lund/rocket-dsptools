@@ -52,5 +52,5 @@ class genericFIRDirectCell[T<:Data:Ring](genIn: => T, genOut: => T) extends Modu
 	val inputRegister = Reg(genIn)
 	inputRegister := io.inputVal
 	io.outputVal := inputRegister
-	io.carryOut := inputVal * io.coeff + io.carryIn 
+	io.carryOut := io.inputVal * io.coeff + io.carryIn 
 }
