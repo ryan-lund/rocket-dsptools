@@ -4,6 +4,7 @@ package rocketdsptools
 
 import chisel3.core._
 import chisel3.{Bundle, Module}
+import dsptools._
 import dsptools.DspTester
 import org.scalatest.{Matchers, FlatSpec}
 import spire.algebra.Ring
@@ -13,11 +14,11 @@ import spire.implicits._
 class genericFIR[T<:Data:Ring](genIn: => T, genOut: => T, numCoeffs: Int) extends Module {
   val io = IO(new Bundle {
   	val inputVal = Input(genIn)
-  	val coeffs = Input(Vec(numCoeff, genIn))
+  	val coeffs = Input(Vec(numCoeffs, genIn))
   	val outputVal = Output(genOut)
   })
   // Construct a vector of genericFIRDirectCells
-  val DirectCells = Vec(Seq.fill(numCoeffs){ Module(new genericFIRDirectCell(genIn, genOut)).io })
+  val DirectCells = Vec(numCoeffs, Seq.fill(numCoeffs){ Module(new genericFIRDirectCell(genIn, genOut)).io })
 
   // Define the carry wire
   // Construct the direct FIR chain
@@ -27,7 +28,7 @@ class genericFIR[T<:Data:Ring](genIn: => T, genOut: => T, numCoeffs: Int) extend
   		DirectCells(i+1).carryIn := DirectCells(i).carryOut // connect carryout to carryin chain
   		DirectCells(i+1).inputVal := DirectCells(i).outputVal // pass delayed signal
   	} else {
-      io.outputVal = DirectCells(i).carryOut
+      io.outputVal := DirectCells(i).carryOut
     }
   }  
 }
@@ -43,7 +44,7 @@ class genericFIR[T<:Data:Ring](genIn: => T, genOut: => T, numCoeffs: Int) extend
 class genericFIRDirectCell[T<:Data:Ring](genIn: => T, genOut: => T) extends Module {
 	val io = IO(new Bundle {
 		val inputVal = Input(genIn) 	// value passed in
-		val coeff = Inout(genIn)		// coefficient of this transpose stage
+		val coeff = Input(genIn)		// coefficient of this transpose stage
 		val carryIn = Input(genOut) 	// carryIn from previous stage
 		val outputVal = Output(genOut)  // value delayed by one time step
 		val carryOut = Output(genOut) 	// carryOut to next stage
