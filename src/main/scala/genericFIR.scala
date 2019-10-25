@@ -5,10 +5,7 @@ package rocketdsptools
 import chisel3.core._
 import chisel3.{Bundle, Module}
 import dsptools._
-import dsptools.DspTester
 import org.scalatest.{Matchers, FlatSpec}
-import spire.algebra.Ring
-import spire.implicits._
 
 // A generic FIR filter
 class genericFIR[T<:Data:Ring](genIn: => T, genOut: => T, numCoeffs: Int) extends Module {
