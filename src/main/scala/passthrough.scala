@@ -6,6 +6,8 @@ import chisel3.core._
 import chisel3.{Bundle, Module}
 import dsptools._
 import org.scalatest.{Matchers, FlatSpec}
+import spire.algebra.Ring
+import spire.implicits._
 
 // Simple passthrough to use as testbed sanity check
 
