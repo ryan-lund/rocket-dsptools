@@ -5,7 +5,6 @@ package rocketdsptools
 import chisel3.core._
 import chisel3.{Bundle, Module}
 import dsptools._
-import org.scalatest.{Matchers, FlatSpec}
 import dsptools.numbers._
 
 // A generic FIR filter

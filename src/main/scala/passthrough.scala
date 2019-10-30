@@ -4,9 +4,7 @@ package rocketdsptools
 
 import chisel3.core._
 import chisel3.{Bundle, Module}
-import dsptools._
 import dsptools.numbers._
-import org.scalatest.{Matchers, FlatSpec}
 
 // Simple passthrough to use as testbed sanity check
 
