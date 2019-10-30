@@ -15,7 +15,7 @@ class genericFIR[T<:Data:Ring](genIn: => T, genOut: => T, numCoeffs: Int) extend
   	val outputVal = Output(genOut)
   })
   // Construct a vector of genericFIRDirectCells
-  val DirectCells = Vec(Seq.fill(numCoeffs){ Module(new genericFIRDirectCell(genIn, genOut)).io })
+  val DirectCells = VecInit(Seq.fill(numCoeffs){ Module(new genericFIRDirectCell(genIn, genOut)).io })
 
   // Define the carry wire
   // Construct the direct FIR chain
