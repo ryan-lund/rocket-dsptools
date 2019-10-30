@@ -40,3 +40,10 @@ class TopWithPassthroughThingModule(l: TopWithPassthroughThing) extends TopModul
   with HasPeripheryPassthroughThingModuleImp
 
 //---------------------------------------------------------------------------------------------------------
+
+class TopWithDTM(implicit p: Parameters) extends System
+{
+  override lazy val module = new TopWithDTMModule(this)
+}
+
+class TopWithDTMModule[+L <: TopWithDTM](l: L) extends SystemModule(l)
