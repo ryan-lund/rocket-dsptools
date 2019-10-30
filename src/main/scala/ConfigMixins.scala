@@ -17,6 +17,23 @@ import hwacha.{Hwacha}
 
 import sifive.blocks.devices.gpio._
 
+object ConfigValName {
+  implicit val valName = ValName("TestHarness")
+}
+import ConfigValName._
+
+// -----------------------
+// Common Parameter Mixins
+// -----------------------
+
+/**
+ * Class to specify where the BootRom file is (from `rebar` top)
+ */
+class WithBootROM extends Config((site, here, up) => {
+  case BootROMParams => BootROMParams(
+    contentFileName = s"./bootrom/bootrom.rv${site(XLen)}.img")
+})
+
 class WithPassthroughThingTop extends Config((site, here, up) => {
   case BuildTop => (clock: Clock, reset: Bool, p: Parameters) =>
     Module(LazyModule(new TopWithPassthroughThing()(p)).module)
