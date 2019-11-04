@@ -8,20 +8,19 @@ import dsptools._
 import dsptools.numbers._
 
 // A generic FIR filter
-class genericFIR[T<:Data:Ring](genIn: => T, genOut: => T, numCoeffs: Int) extends Module {
+class genericFIR[T<:Data:Ring](genIn: => T, genOut: => T, coeffs: => Seq[T]) extends Module {
   val io = IO(new Bundle {
   	val inputVal = Input(genIn)
-  	val coeffs = Input(Vec(numCoeffs, genIn))
   	val outputVal = Output(genOut)
   })
   // Construct a vector of genericFIRDirectCells
-  val DirectCells = VecInit(Seq.fill(numCoeffs){ Module(new genericFIRDirectCell(genIn, genOut)).io })
+  val DirectCells = VecInit(Seq.fill(coeffs.length){ Module(new genericFIRDirectCell(genIn, genOut)).io })
 
   // Define the carry wire
   // Construct the direct FIR chain
-  for(i <- 0 until numCoeffs) {
-  	DirectCells(i).coeff := io.coeffs(i) // wire coefficient from supplied vector
-  	if (i != numCoeffs - 1) {
+  for(i <- 0 until coeffs.length) {
+  	DirectCells(i).coeff := coeffs(i) // wire coefficient from supplied vector
+  	if (i != coeffs.length - 1) {
   		DirectCells(i+1).carryIn := DirectCells(i).carryOut // connect carryout to carryin chain
   		DirectCells(i+1).inputVal := DirectCells(i).outputVal // pass delayed signal
   	} else {

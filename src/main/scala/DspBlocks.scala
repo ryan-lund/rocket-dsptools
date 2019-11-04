@@ -235,6 +235,7 @@ class TLPassthroughBlock[T<:Data:Ring]
   * @param p
   * @tparam T
   */
+/*
 class PassthroughChain[T<:Data:Ring]
 (
   val depth: Int = 8,
@@ -245,6 +246,7 @@ class PassthroughChain[T<:Data:Ring]
     {implicit p: Parameters => { val readQueue = LazyModule(new TLReadQueue(depth)); readQueue}},
   )
 )
+*/
 
 /**
   * PassthroughChain is the "right way" to do this, but the dspblocks library seems to be broken.
