@@ -9,6 +9,7 @@ import freechips.rocketchip.config.Parameters
 import freechips.rocketchip.diplomacy._
 import freechips.rocketchip.regmapper._
 import freechips.rocketchip.tilelink._
+import freechips.rocketchip.subsystem._
 
 
 trait HasPeripheryPassthroughThing { this: BaseSubsystem =>
@@ -193,7 +194,7 @@ abstract class PassthroughBlock[D, U, EO, EI, B<:Data, T<:Data:Ring]
     val out = streamNode.out.head._1
 
     // instantiate passthrough
-    val passthrough = Module(new Passthrough(T))
+    val passthrough = Module(new Passthrough(proto))
 
     // Pass ready and valid from read queue to write queue
     // TODO: verify this assignment is valid and works

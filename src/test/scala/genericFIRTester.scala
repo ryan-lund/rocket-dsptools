@@ -19,7 +19,7 @@ case class X(
  *
  * Run each trial in @trials
  */
-class genericFIRTester[T <: chisel3.Data](g: IterativeGenericFIR[T], trials: Seq[X], tolLSBs: Int = 0) extends DspTester(c) {
+class genericFIRTester[T <: chisel3.Data](g: IterativeGenericFIR[T], trials: Seq[X], tolLSBs: Int = 0) extends DspTester(g) {
   //val maxCyclesWait = 50
 
   //poke(c.io.out.ready, 1)

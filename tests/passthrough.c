@@ -11,14 +11,14 @@ int main(void)
 {
   uint32_t test_vector[7] = {3, 2, 1, 0, -1, -2, -3} ;
   for (int i = 0; i < 7; i++) {
-    reg_write32(CORDIC_WRITE, test_vector[i]);
+    reg_write32(PASSTHROUGH_WRITE, test_vector[i]);
   }
 
   printf("Done writing\n");
 
   int failed = 0;
   for (int i = 0; i < 7; i++) {
-    uint32_t res = reg_read32(CORDIC_READ);
+    uint32_t res = reg_read32(PASSTHROUGH_READ);
     uint32_t expected = test_vector[i];
     if (res == expected) {
       printf("\n\nPass: Got %d Expected %d\n\n", res, test_vector[i]);

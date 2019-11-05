@@ -8,7 +8,7 @@ import dsptools._
 import dsptools.numbers._
 
 // A generic FIR filter
-class genericFIR[T<:Data:Ring](genIn: => T, genOut: => T, coeffs: => Seq[T]) extends Module {
+class genericFIR[T<:Data:Ring](genIn: T, genOut: T, coeffs: Seq[T]) extends Module {
   val io = IO(new Bundle {
   	val inputVal = Input(genIn)
   	val outputVal = Output(genOut)
@@ -37,7 +37,7 @@ class genericFIR[T<:Data:Ring](genIn: => T, genOut: => T, coeffs: => Seq[T]) ext
 //	            |
 //	 carryIn --[+]---------- carryOut
 //
-class genericFIRDirectCell[T<:Data:Ring](genIn: => T, genOut: => T) extends Module {
+class genericFIRDirectCell[T<:Data:Ring](genIn: T, genOut: T) extends Module {
 	val io = IO(new Bundle {
 		val inputVal = Input(genIn) 	// value passed in
 		val coeff = Input(genIn)		// coefficient of this transpose stage
