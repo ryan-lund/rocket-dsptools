@@ -221,12 +221,9 @@ abstract class PassthroughBlock[D, U, EO, EI, B<:Data, T<:Data:Ring]
   */
 class TLPassthroughBlock[T<:Data:Ring]
 (
-  proto: T
+  val proto: T
 )(implicit p: Parameters) extends
-  PassthroughBlock[TLClientPortParameters, TLManagerPortParameters, TLEdgeOut, TLEdgeIn, TLBundle, T]
-(
-  proto
-) with TLDspBlock
+PassthroughBlock[TLClientPortParameters, TLManagerPortParameters, TLEdgeOut, TLEdgeIn, TLBundle, T]() with TLDspBlock
 
 /**
   * This doesn't work right now, TLChain seems to be broken. This is the "right way" to connect several DspBlocks and
