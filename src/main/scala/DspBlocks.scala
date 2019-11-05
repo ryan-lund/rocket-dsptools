@@ -17,14 +17,14 @@ trait HasPeripheryUIntPassthrough { this: BaseSubsystem =>
 
   private val portName = "passthrough"
 
-  val passthrough = LazyModule(new PassthroughThing(UInt(32.W))(p))
+  val passthrough = LazyModule(new PassthroughThing(UInt(32.W))())
 
   pbus.toVariableWidthSlave(Some(portName)) { passthrough.node }
 }
 
 trait HasPeripheryUIntPassthroughModuleImp extends LazyModuleImp {
   implicit val p: Parameters
-  val outer: HasPeripheryUintPassthrough
+  val outer: HasPeripheryUIntPassthrough
 
   val passthroughout = IO(Output(Bool()))
 
@@ -203,7 +203,7 @@ abstract class PassthroughBlock[D, U, EO, EI, B<:Data, T<:Data:Ring]
     out.valid := in.valid
 
     // cast UInt to T
-    passthrough.io.in := in.bits.data.asTypeOf(T)
+    passthrough.io.in := in.bits.data.asTypeOf(proto)
 
     // cast T to UInt
     out.bits.data := passthrough.io.out.asUInt
@@ -223,7 +223,7 @@ class TLPassthroughBlock[T<:Data:Ring]
 (
   val proto: T
 )(implicit p: Parameters) extends
-PassthroughBlock[TLClientPortParameters, TLManagerPortParameters, TLEdgeOut, TLEdgeIn, TLBundle, T]() with TLDspBlock
+PassthroughBlock[TLClientPortParameters, TLManagerPortParameters, TLEdgeOut, TLEdgeIn, TLBundle, T](proto) with TLDspBlock
 
 /**
   * This doesn't work right now, TLChain seems to be broken. This is the "right way" to connect several DspBlocks and
