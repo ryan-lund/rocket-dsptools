@@ -8,7 +8,7 @@ import dsptools.numbers._
 
 // Simple passthrough to use as testbed sanity check
 
-class passthrough[T<:Data:Ring](gen: => T) extends Module {
+class passthrough[T<:Data:Ring](gen: T) extends Module {
     val io = IO(new Bundle {
        val in =  Input(gen)
        val out = Output(gen)

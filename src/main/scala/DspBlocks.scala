@@ -181,7 +181,7 @@ class TLReadQueue
   */
 abstract class PassthroughBlock[D, U, EO, EI, B<:Data, T<:Data:Ring]
 (
-
+  proto: T
 )(implicit p: Parameters) extends DspBlock[D, U, EO, EI, B] {
   val streamNode = AXI4StreamIdentityNode()
   val mem = None
