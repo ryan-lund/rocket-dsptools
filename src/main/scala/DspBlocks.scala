@@ -12,19 +12,19 @@ import freechips.rocketchip.tilelink._
 import freechips.rocketchip.subsystem._
 
 
-trait HasPeripheryPassthroughThing { this: BaseSubsystem =>
+trait HasPeripheryUIntPassthrough { this: BaseSubsystem =>
   implicit val p: Parameters
 
   private val portName = "passthrough"
 
-  val passthrough = LazyModule(new PassthroughThing()(p))
+  val passthrough = LazyModule(new PassthroughThing(UInt(32.W))(p))
 
   pbus.toVariableWidthSlave(Some(portName)) { passthrough.node }
 }
 
-trait HasPeripheryPassthroughThingModuleImp extends LazyModuleImp {
+trait HasPeripheryUIntPassthroughModuleImp extends LazyModuleImp {
   implicit val p: Parameters
-  val outer: HasPeripheryPassthroughThing
+  val outer: HasPeripheryUintPassthrough
 
   val passthroughout = IO(Output(Bool()))
 
@@ -263,11 +263,12 @@ class PassthroughChain[T<:Data:Ring]
   */
 class PassthroughThing[T<:Data:Ring]
 (
+  val proto: T,
   val depth: Int = 8,
 )(implicit p: Parameters) extends LazyModule {
   // instantiate lazy modules
   val writeQueue = LazyModule(new TLWriteQueue(depth))
-  val passthrough = LazyModule(new TLPassthroughBlock())
+  val passthrough = LazyModule(new TLPassthroughBlock(proto))
   val readQueue = LazyModule(new TLReadQueue(depth))
 
   // connect streamNodes of queues and cordic

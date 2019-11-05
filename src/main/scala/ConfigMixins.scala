@@ -34,7 +34,7 @@ class WithBootROM extends Config((site, here, up) => {
     contentFileName = s"./bootrom/bootrom.rv${site(XLen)}.img")
 })
 
-class WithPassthroughThingTop extends Config((site, here, up) => {
+class WithUIntPassthroughTop extends Config((site, here, up) => {
   case BuildTop => (clock: Clock, reset: Bool, p: Parameters) =>
-    Module(LazyModule(new TopWithPassthroughThing()(p)).module)
+    Module(LazyModule(new TopWithUIntPassthrough()(p)).module)
 })
