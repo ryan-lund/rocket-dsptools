@@ -31,13 +31,13 @@ class TopModule[+L <: Top](l: L) extends SystemModule(l)
 
 //---------------------------------------------------------------------------------------------------------
 
-class TopWithUIntPassthrough(implicit p: Parameters) extends Top
-  with HasPeripheryUIntPassthrough {
-  override lazy val module = new TopWithUIntPassthroughModule(this)
+class TopWithTLUIntPassthrough(implicit p: Parameters) extends Top
+  with HasPeripheryTLUIntPassthrough {
+  override lazy val module = new TopWithTLUIntPassthroughModule(this)
 }
 
-class TopWithUIntPassthroughModule(l: TopWithUIntPassthrough) extends TopModule(l)
-  with HasPeripheryUIntPassthroughModuleImp
+class TopWithTLUIntPassthroughModule(l: TopWithTLUIntPassthrough) extends TopModule(l)
+  with HasPeripheryTLUIntPassthroughModuleImp
 
 //---------------------------------------------------------------------------------------------------------
 
