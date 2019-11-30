@@ -2,9 +2,18 @@
 //
 package rocketdsptools
 
+import chisel3._
 import chisel3.core._
 import chisel3.{Bundle, Module}
+import chisel3.util._
+import dspblocks._
 import dsptools.numbers._
+import freechips.rocketchip.amba.axi4stream._
+import freechips.rocketchip.config.Parameters
+import freechips.rocketchip.diplomacy._
+import freechips.rocketchip.regmapper._
+import freechips.rocketchip.tilelink._
+import freechips.rocketchip.subsystem._
 
 // Simple passthrough to use as testbed sanity check
 
