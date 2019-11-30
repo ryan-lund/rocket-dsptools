@@ -5,7 +5,7 @@ import chisel3._
 import freechips.rocketchip.config.{Config}
 
 class UIntPassthroughRocketConfig extends Config(
-  new WithUIntPassthroughTop ++                                        // use top with tilelink-controlled PWM
+  new WithTLUIntPassthroughTop ++                                        // use top with tilelink-controlled PWM
   new WithBootROM ++
   new freechips.rocketchip.subsystem.WithInclusiveCache ++
   new freechips.rocketchip.subsystem.WithNBigCores(1) ++
