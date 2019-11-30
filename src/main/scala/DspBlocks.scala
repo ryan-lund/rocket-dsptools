@@ -17,7 +17,7 @@ trait HasPeripheryUIntPassthrough { this: BaseSubsystem =>
 
   private val portName = "passthrough"
 
-  val passthrough = LazyModule(new PassthroughThing(UInt(32.W), 8))
+  val passthrough = LazyModule(new PassthroughThing(UInt(32.W), 8)(p))
 
   pbus.toVariableWidthSlave(Some(portName)) { passthrough.node }
 }
