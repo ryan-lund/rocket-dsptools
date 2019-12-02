@@ -3,7 +3,6 @@
 package rocketdsptools
 
 import chisel3._
-import chisel3.core._
 import chisel3.{Bundle, Module}
 import chisel3.util._
 import dspblocks._
@@ -22,7 +21,7 @@ class Passthrough[T<:Data:Ring](gen: T) extends Module {
        val in =  Input(gen)
        val out = Output(gen)
     })
-    io.in := io.out
+    io.out := io.in
 }
 
 /**
@@ -102,7 +101,7 @@ class PassthroughChain[T<:Data:Ring]
 )(implicit p: Parameters) extends TLChain(
   Seq(
     {implicit p: Parameters => { val writeQueue = LazyModule(new TLWriteQueue(depth)); writeQueue}},
-    {implicit p: Parameters => { val passthrough = LazyModule(new TLPassthroughBlock()); passthrough}},
+    {implicit p: Parameters => { val passthrough = LazyModule(new TLPassthroughBlock(proto)); passthrough}},
     {implicit p: Parameters => { val readQueue = LazyModule(new TLReadQueue(depth)); readQueue}},
   )
 )
@@ -118,11 +117,8 @@ class PassthroughChain[T<:Data:Ring]
   * @param p
   * @tparam T Type parameter for passthrough, i.e. FixedPoint or DspReal
   */
-class TLPassthroughThing[T<:Data:Ring]
-(
-  val proto: T,
-  val depth: Int = 8,
-)(implicit p: Parameters) extends LazyModule {
+class TLPassthroughThing[T<:Data:Ring] (proto: T, depth: Int)(implicit p: Parameters) 
+  extends LazyModule {
   // instantiate lazy modules
   val writeQueue = LazyModule(new TLWriteQueue(depth))
   val passthrough = LazyModule(new TLPassthroughBlock(proto))
@@ -135,21 +131,10 @@ class TLPassthroughThing[T<:Data:Ring]
 }
 
 
-trait HasPeripheryTLUIntPassthrough { this: BaseSubsystem =>
-  implicit val p: Parameters
+trait HasPeripheryTLUIntPassthrough extends BaseSubsystem {
+  val passthrough = LazyModule(new TLPassthroughThing(UInt(32.W), 8))
 
-  private val portName = "passthrough"
-
-  val passthrough = LazyModule(new TLPassthroughThing(UInt(32.W), 8)(p))
-
-  pbus.toVariableWidthSlave(Some(portName)) { passthrough.node }
+  pbus.toVariableWidthSlave(Some("PassthrougWrite")) { passthrough.writeQueue.mem.get }
+  pbus.toVariableWidthSlave(Some("PassthroughRead")) { passthrough.readQueue.mem.get }
 }
 
-trait HasPeripheryTLUIntPassthroughModuleImp extends LazyModuleImp {
-  implicit val p: Parameters
-  val outer: HasPeripheryTLUIntPassthrough
-
-  val passthroughout = IO(Output(Bool()))
-
-  passthroughout := outer.passthrough.module.io.out
-}
