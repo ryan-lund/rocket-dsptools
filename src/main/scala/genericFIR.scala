@@ -4,21 +4,31 @@ package rocketdsptools
 
 import chisel3.core._
 import chisel3.{Bundle, Module}
+import chisel3.util.Decoupled
 import dsptools._
 import dsptools.numbers._
 
+class genericFIRIO[T<:Data:Ring](genIn:T, genOut:T) extends Bundle {
+    val in = Decoupled(Input(genIn))
+    val out = Decoupled(Output(genOut))
+
+    override def cloneType: this.type = genericFIRIO(genIn, genOut).asInstanceOf[this.type]
+}
+object genericFIRIO {
+    def apply[T<:Data:Ring](genIn:T, genOut:T): genericFIRIO[T] = new genericFIRIO(genIn, genOut)
+}
+
 // A generic FIR filter
-class genericFIR[T<:Data:Ring](genIn: T, genOut: T, coeffs: Seq[T]) extends Module {
-  val io = IO(new Bundle {
-  	val in = Input(genIn)
-  	val out = Output(genOut)
-  })
+class genericFIR[T<:Data:Ring](genIn:T, genOut:T, coeffs: Seq[T]) extends Module {
+  val io = IO(genericFIRIO(genIn, genOut))
+  ;
   // Construct a vector of genericFIRDirectCells
-  val DirectCells = VecInit(Seq.fill(coeffs.length){ Module(new genericFIRDirectCell(genIn, genOut)).io })
+  val DirectCells = Seq.fill(coeffs.length){ Module(new genericFIRDirectCell(genIn, genOut)).io }
 
   // Define the carry wire
   // Construct the direct FIR chain
   DirectCells(0).in := io.in
+  DirectCells(0).carryIn := Ring[T].zero
   for(i <- 0 until coeffs.length) {
   	DirectCells(i).coeff := coeffs(i) // wire coefficient from supplied vector
   	if (i != coeffs.length - 1) {
@@ -52,3 +62,4 @@ class genericFIRDirectCell[T<:Data:Ring](genIn: T, genOut: T) extends Module {
 	io.out := inputRegister
 	io.carryOut := io.in * io.coeff + io.carryIn 
 }
+

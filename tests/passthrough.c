@@ -12,23 +12,31 @@
 
 int main(void)
 {
+  printf("Starting writing\n");
   uint32_t test_vector[7] = {3, 2, 1, 0, -1, -2, -3} ;
   for (int i = 0; i < 7; i++) {
-    reg_write32(PASSTHROUGH_WRITE, test_vector[i]);
+    reg_write64(PASSTHROUGH_WRITE, test_vector[i]);
   }
 
   printf("Done writing\n");
+  uint32_t rcnt = reg_read32(PASSTHROUGH_READ_COUNT);
+  printf("Write count: %d\n", reg_read32(PASSTHROUGH_WRITE_COUNT));
+  printf("Read count: %d\n", rcnt);
 
   int failed = 0;
-  for (int i = 0; i < 7; i++) {
-    uint32_t res = reg_read32(PASSTHROUGH_READ);
-    uint32_t expected = test_vector[i];
-    if (res == expected) {
-      printf("\n\nPass: Got %d Expected %d\n\n", res, test_vector[i]);
-    } else {
-      failed = 1;
-      printf("\n\nFail: Got %d Expected %d\n\n", res, test_vector[i]);
+  if (rcnt != 0) {
+    for (int i = 0; i < 7; i++) {
+      uint32_t res = reg_read32(PASSTHROUGH_READ);
+      uint32_t expected = test_vector[i];
+      if (res == expected) {
+        printf("\n\nPass: Got %d Expected %d\n\n", res, test_vector[i]);
+      } else {
+        failed = 1;
+        printf("\n\nFail: Got %d Expected %d\n\n", res, test_vector[i]);
+      }
     }
+  } else {
+    failed = 1;
   }
 
   if (failed) {
@@ -36,6 +44,6 @@ int main(void)
   } else {
     printf("\n\nAll tests passed\n\n");
   }
-
-	return 0;
+  
+  return 0;
 }

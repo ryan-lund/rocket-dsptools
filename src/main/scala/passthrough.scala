@@ -16,12 +16,29 @@ import freechips.rocketchip.subsystem._
 
 // Simple passthrough to use as testbed sanity check
 
-class Passthrough[T<:Data:Ring](gen: T) extends Module {
-    val io = IO(new Bundle {
-       val in =  Input(gen)
-       val out = Output(gen)
-    })
-    io.out := io.in
+class PassthroughBundle[T<:Data:Ring](proto: T) extends Bundle {
+    val data: T = proto.cloneType
+
+    override def cloneType: this.type = PassthroughBundle(proto).asInstanceOf[this.type]
+}
+object PassthroughBundle {
+    def apply[T<:Data:Ring](proto: T): PassthroughBundle[T] = new PassthroughBundle(proto)
+}
+
+class PassthroughIO[T<:Data:Ring](proto: T) extends Bundle {
+    val in = Flipped(Decoupled(PassthroughBundle(proto)))
+    val out = Decoupled(PassthroughBundle(proto))
+}
+object PassthroughIO {
+    def apply[T<:Data:Ring](proto: T): PassthroughIO[T] = new PassthroughIO(proto)
+}
+
+class Passthrough[T<:Data:Ring](proto: T) extends Module {
+    val io = IO(PassthroughIO(proto))
+
+    io.in.ready := io.out.ready
+    io.out.bits.data := io.in.bits.data
+    io.out.valid := io.in.valid
 }
 
 /**
@@ -58,14 +75,17 @@ abstract class PassthroughBlock[D, U, EO, EI, B<:Data, T<:Data:Ring]
     // Pass ready and valid from read queue to write queue
     // TODO: verify this assignment is valid and works
     
-    in.ready := out.ready
-    out.valid := in.valid
+    in.ready := passthrough.io.in.ready
+    passthrough.io.in.valid := in.valid
 
     // cast UInt to T
-    passthrough.io.in := in.bits.data.asTypeOf(proto)
+    passthrough.io.in.bits := in.bits.data.asTypeOf(PassthroughBundle(proto))
+
+    passthrough.io.out.ready := out.ready
+    out.valid := passthrough.io.out.valid
 
     // cast T to UInt
-    out.bits.data := passthrough.io.out.asUInt
+    out.bits.data := passthrough.io.out.bits.asUInt
   }
 }
 
@@ -124,7 +144,7 @@ class TLPassthroughThing[T<:Data:Ring] (proto: T, depth: Int)(implicit p: Parame
   val passthrough = LazyModule(new TLPassthroughBlock(proto))
   val readQueue = LazyModule(new TLReadQueue(depth))
 
-  // connect streamNodes of queues and cordic
+  // connect streamNodes of queues and passthrough
   readQueue.streamNode := passthrough.streamNode := writeQueue.streamNode
 
   lazy val module = new LazyModuleImp(this)
@@ -134,7 +154,7 @@ class TLPassthroughThing[T<:Data:Ring] (proto: T, depth: Int)(implicit p: Parame
 trait HasPeripheryTLUIntPassthrough extends BaseSubsystem {
   val passthrough = LazyModule(new TLPassthroughThing(UInt(32.W), 8))
 
-  pbus.toVariableWidthSlave(Some("PassthrougWrite")) { passthrough.writeQueue.mem.get }
-  pbus.toVariableWidthSlave(Some("PassthroughRead")) { passthrough.readQueue.mem.get }
+  pbus.toVariableWidthSlave(Some("passthrougWrite")) { passthrough.writeQueue.mem.get }
+  pbus.toVariableWidthSlave(Some("passthroughRead")) { passthrough.readQueue.mem.get }
 }
 
