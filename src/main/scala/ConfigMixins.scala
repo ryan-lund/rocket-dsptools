@@ -38,3 +38,8 @@ class WithTLUIntPassthroughTop extends Config((site, here, up) => {
   case BuildTop => (clock: Clock, reset: Bool, p: Parameters) =>
     Module(LazyModule(new TopWithTLUIntPassthrough()(p)).module)
 })
+
+class WithTLUIntTestFIRTop extends Config((site, here,up) => {
+  case BuildTop => (clock: Clock, reset: Bool, p:Parameters) =>
+    Module(LazyModule(new TopWithTLUIntTestFIR()(p)).module)
+})

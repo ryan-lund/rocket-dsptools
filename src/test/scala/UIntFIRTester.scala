@@ -15,7 +15,7 @@ class UIntFIRTester(dut: genericFIR[UInt], n: Int = 3, maxTests: Int = 500) exte
   // initialize FIR
   for (_ <- 0 until 2) {
     val x = Random.nextInt(randMax) //constrain to be UInt(3.W)
-    poke(dut.io.in, x)
+    poke(dut.io.in.bits.data, x)
     step(1)
     z = y
     y = x
@@ -24,8 +24,9 @@ class UIntFIRTester(dut: genericFIR[UInt], n: Int = 3, maxTests: Int = 500) exte
   for (_ <- 0 until maxTests) {
     val x = Random.nextInt(randMax) 
     val expected = x + y + z
-    poke(dut.io.in, x)
-    expect(dut.io.out, expected)
+    poke(dut.io.in.valid, 1.U)
+    poke(dut.io.in.bits.data, x)
+    expect(dut.io.out.bits.data, expected)
     step(1)
     z = y
     y = x

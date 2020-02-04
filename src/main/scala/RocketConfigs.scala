@@ -11,3 +11,11 @@ class UIntPassthroughRocketConfig extends Config(
   new freechips.rocketchip.subsystem.WithNBigCores(1) ++
   new freechips.rocketchip.system.BaseConfig
 )
+
+class UIntTestFIRRocketConfig extends Config (
+  new WithTLUIntTestFIRTop ++ // use top with tilelink-controller FIR
+  new WithBootROM ++
+  new freechips.rocketchip.subsystem.WithInclusiveCache ++
+  new freechips.rocketchip.subsystem.WithNBigCores(1) ++
+  new freechips.rocketchip.system.BaseConfig
+)

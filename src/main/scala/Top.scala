@@ -36,6 +36,11 @@ class TopWithTLUIntPassthrough(implicit p: Parameters) extends Top
   override lazy val module = new TopModule(this)
 }
 
+class TopWithTLUIntTestFIR(implicit p: Parameters) extends Top
+  with HasPeripheryTLUIntTestFIR {
+  override lazy val module = new TopModule(this)
+}
+
 //---------------------------------------------------------------------------------------------------------
 
 class TopWithDTM(implicit p: Parameters) extends System
