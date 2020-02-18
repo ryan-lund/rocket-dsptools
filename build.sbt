@@ -17,5 +17,3 @@ name := "rocketdsptools"
 organization := "edu.berkeley.cs"
 version := "0.1-SNAPSHOT"
 scalaVersion := "2.12.6"
-
-libraryDependencies += "edu.berkeley.cs" %% "rocket-dsptools" % "1.3-SNAPSHOT"

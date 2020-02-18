@@ -20,16 +20,16 @@ class GenericFIRCellBundle[T<:Data:Ring](genIn:T, genOut:T) extends Bundle {
   override def cloneType: this.type = GenericFIRCellBundle(genIn, genOut).asInstanceOf[this.type]
 }
 object GenericFIRCellBundle {
-    def apply[T<:Data:Ring](genIn:T, genOut:T): GenericFIRCellBundle[T] = new GenericFIRCellBundle(genIn, genOut)
+  def apply[T<:Data:Ring](genIn:T, genOut:T): GenericFIRCellBundle[T] = new GenericFIRCellBundle(genIn, genOut)
 }
 
 class GenericFIRCellIO[T<:Data:Ring](genIn:T, genOut:T) extends Bundle {
-    val coeff = Input(genIn.cloneType)
-    val in = Flipped(Decoupled(GenericFIRCellBundle(genIn, genOut)))
-    val out = Decoupled(GenericFIRCellBundle(genIn, genOut))
+  val coeff = Input(genIn.cloneType)
+  val in = Flipped(Decoupled(GenericFIRCellBundle(genIn, genOut)))
+  val out = Decoupled(GenericFIRCellBundle(genIn, genOut))
 }
 object GenericFIRCellIO {
-    def apply[T<:Data:Ring](genIn:T, genOut:T): GenericFIRCellIO[T] = new GenericFIRCellIO(genIn, genOut)
+  def apply[T<:Data:Ring](genIn:T, genOut:T): GenericFIRCellIO[T] = new GenericFIRCellIO(genIn, genOut)
 }
 
 class GenericFIRBundle[T<:Data:Ring](proto: T) extends Bundle {
@@ -42,74 +42,76 @@ object GenericFIRBundle {
 }
 
 class GenericFIRIO[T<:Data:Ring](genIn:T, genOut:T) extends Bundle {
-    val in = Flipped(Decoupled(GenericFIRBundle(genIn)))
-    val out = Decoupled(GenericFIRBundle(genOut))
+  val in = Flipped(Decoupled(GenericFIRBundle(genIn)))
+  val out = Decoupled(GenericFIRBundle(genOut))
 }
 object GenericFIRIO {
-    def apply[T<:Data:Ring](genIn:T, genOut:T): GenericFIRIO[T] = new GenericFIRIO(genIn, genOut)
+  def apply[T<:Data:Ring](genIn:T, genOut:T): GenericFIRIO[T] = new GenericFIRIO(genIn, genOut)
 }
 
 // A generic FIR filter
 class GenericFIR[T<:Data:Ring](genIn:T, genOut:T, coeffs: Seq[T]) extends Module {
   val io = IO(GenericFIRIO(genIn, genOut))
 
-  // Construct a vector of GenericFIRDirectCells
+  // Construct a vector of genericFIRDirectCells
   val directCells = Seq.fill(coeffs.length){ Module(new GenericFIRDirectCell(genIn, genOut)).io }
 
-  // connect coefficients
-  for ((cell, coeff) <- directCells.zip(coeffs)) {
-    cell.coeff := coeff
-  }
-
-  // connect input to first cell.
-  directCells(0).in.bits.data := io.in.bits
-  directCells(0).in.bits.carry := Ring[T].zero // first cell has no carry
+  // Construct the direct FIR chain
+  // connect input to first cell
+  directCells(0).in.bits.data := io.in.bits.data
+  directCells(0).in.bits.carry := Ring[T].zero
   directCells(0).in.valid := io.in.valid
   io.in.ready := directCells(0).in.ready
 
-  // connect adjacent cells
-  for ((prev, next) <- directCells.zip(directCells.tail)) {
-    next.in.bits := prev.out.bits
-    next.in.valid := prev.out.valid
-    prev.out.ready := next.out.ready
-  }
-
-  // connect output to last cell
-  io.out.bits := directCells.last.out.bits.carry
-  io.out.valid := directCells.last.out.valid
-  directCells.last.out.ready := io.out.ready
+  for(i <- 0 until coeffs.length) {
+  	directCells(i).coeff := coeffs(i) // wire coefficient from supplied vector
+  	if (i != coeffs.length - 1) { // connect adjacent cells
+  	  directCells(i+1).in.bits := directCells(i).out.bits  // connect out to in chain
+	    directCells(i+1).in.valid := directCells(i).out.valid // connect valid chain
+      directCells(i).out.ready := directCells(i+1).in.ready // connect ready chain
+  	} else { // connect output to last cell
+      io.out.bits.data := directCells(i).out.bits.carry
+      directCells(i).out.ready := io.out.ready
+	    io.out.valid := directCells(i).out.valid
+    }
+  }  
 }
 
 // A generic FIR direct cell used to construct a larger direct FIR chain
 //
 //   in ----- [z^-1]-- out
-//              |
+//	            |
 //   coeff ----[*]
-//              |
+//	            |
 //   carryIn --[+]-- carryOut
 //
 class GenericFIRDirectCell[T<:Data:Ring](genIn: T, genOut: T) extends Module {
-  val io = IO(GenericFIRCellIO(genIn, genOut))
+	val io = IO(GenericFIRCellIO(genIn, genOut))
+	
+  // Registers to delay the input and the valid to propagate with calculations
+  val hasNewData = RegInit(0.U)
+  val inputReg = Reg(genIn)
 
   // Passthrough ready
   io.in.ready := io.out.ready
-
-  // TODO reason about ready/valid
-  // Describe what's going on
-  val validReg = RegNext(io.in.fire(), init = false.B)
-  io.out.valid := validReg
-
-  // Delay input by 1 cycle to output
-  val inputReg = Reg(genIn.cloneType)
-  when (io.out.ready) {
-    inputReg := io.in.bits.data
+	
+  // When a new transaction is ready on the input, we will have new data to output
+  // next cycle. Take this data in
+  when (io.in.fire()) {
+    hasNewData := 1.U
+	  inputReg := io.in.bits.data
   }
+	  
+  // We should output data when our cell has new data to output and is ready to
+  // recieve new data. This insures that every cell in the chain passes its data
+  // on at the same time
+  io.out.valid := hasNewData & io.in.fire()
   io.out.bits.data := inputReg
 
-  // Compute multiply + carry.
+  // Compute carry
   // This uses the ring implementation for + and *, i.e.
-  // (a * b) maps to (Ring[T].prod(a, b)) for whichever T you use
-  io.out.bits.carry := io.in.bits.data * io.coeff + io.in.bits.carry
+  // (a * b) maps to (Ring[T].prod(a, b)) for whicever T you use
+  io.out.bits.carry := inputReg * io.coeff + io.in.bits.carry 
 }
 
 abstract class GenericFIRBlock[D, U, EO, EI, B<:Data, T<:Data:Ring]
@@ -154,7 +156,7 @@ class TLGenericFIRBlock[T<:Data:Ring]
   coeffs: Seq[T]
 )(implicit p: Parameters) extends
 GenericFIRBlock[TLClientPortParameters, TLManagerPortParameters, TLEdgeOut, TLEdgeIn, TLBundle, T](
-  genIn, genOut, coeffs
+    genIn, genOut, coeffs
 ) with TLDspBlock
 
 class TLGenericFIRThing[T<:Data:Ring] (genIn: T, genOut: T, coeffs: Seq[T], depth: Int)(implicit p: Parameters)
