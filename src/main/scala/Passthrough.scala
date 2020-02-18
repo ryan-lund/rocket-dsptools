@@ -10,7 +10,6 @@ import dsptools.numbers._
 import freechips.rocketchip.amba.axi4stream._
 import freechips.rocketchip.config.Parameters
 import freechips.rocketchip.diplomacy._
-import freechips.rocketchip.regmapper._
 import freechips.rocketchip.tilelink._
 import freechips.rocketchip.subsystem._
 
@@ -73,8 +72,6 @@ abstract class PassthroughBlock[D, U, EO, EI, B<:Data, T<:Data:Ring]
     val passthrough = Module(new Passthrough(proto))
 
     // Pass ready and valid from read queue to write queue
-    // TODO: verify this assignment is valid and works
-    
     in.ready := passthrough.io.in.ready
     passthrough.io.in.valid := in.valid
 
@@ -102,7 +99,8 @@ class TLPassthroughBlock[T<:Data:Ring]
 (
   val proto: T
 )(implicit p: Parameters) extends
-PassthroughBlock[TLClientPortParameters, TLManagerPortParameters, TLEdgeOut, TLEdgeIn, TLBundle, T](proto) with TLDspBlock
+PassthroughBlock[TLClientPortParameters, TLManagerPortParameters, TLEdgeOut, TLEdgeIn, TLBundle, T](proto)
+with TLDspBlock
 
 /**
   * This doesn't work right now, TLChain seems to be broken. This is the "right way" to connect several DspBlocks and
@@ -137,7 +135,7 @@ class PassthroughChain[T<:Data:Ring]
   * @param p
   * @tparam T Type parameter for passthrough, i.e. FixedPoint or DspReal
   */
-class TLPassthroughThing[T<:Data:Ring] (proto: T, depth: Int)(implicit p: Parameters) 
+class TLPassthroughThing[T<:Data:Ring] (proto: T, depth: Int)(implicit p: Parameters)
   extends LazyModule {
   // instantiate lazy modules
   val writeQueue = LazyModule(new TLWriteQueue(depth))
