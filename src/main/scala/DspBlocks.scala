@@ -30,7 +30,7 @@ abstract class WriteQueue
     require(streamNode.out.length == 1)
 
     // get the output bundle associated with the AXI4Stream node
-    val out = streamNode.out(0)._1
+    val out = streamNode.out.head._1
     // width (in bits) of the output interface
     val width = out.params.n * 8
     // instantiate a queue
@@ -94,7 +94,7 @@ abstract class ReadQueue
     require(streamNode.in.length == 1)
 
     // get the input associated with the stream node
-    val in = streamNode.in(0)._1
+    val in = streamNode.in.head._1
     // make a Decoupled[UInt] that RegReadFn can do something with
     val out = Wire(Decoupled(UInt()))
     // get width of streaming input interface
