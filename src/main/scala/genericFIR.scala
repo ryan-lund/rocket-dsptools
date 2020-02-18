@@ -59,7 +59,7 @@ class genericFIR[T<:Data:Ring](genIn:T, genOut:T, coeffs: Seq[T]) extends Module
 
   // Define the carry wire
   // Construct the direct FIR chain
-  DirectCells(0).in.bits.data := io.in.bits
+  DirectCells(0).in.bits.data := io.in.bits.data
   DirectCells(0).in.bits.carry := Ring[T].zero
   DirectCells(0).in.valid := io.in.valid
   io.in.ready := DirectCells(0).in.ready
@@ -70,9 +70,9 @@ class genericFIR[T<:Data:Ring](genIn:T, genOut:T, coeffs: Seq[T]) extends Module
 	    DirectCells(i+1).in.valid := DirectCells(i).out.valid // connect valid chain
             DirectCells(i).out.ready := DirectCells(i+1).in.ready // connect ready chain
   	} else {
-            io.out.bits := DirectCells(i).out.bits.carry
+            io.out.bits.data := DirectCells(i).out.bits.carry
             DirectCells(i).out.ready := io.out.ready
-	    io.in.valid := DirectCells(i).out.valid
+	    io.out.valid := DirectCells(i).out.valid
     }
   }  
 }
@@ -88,21 +88,23 @@ class genericFIR[T<:Data:Ring](genIn:T, genOut:T, coeffs: Seq[T]) extends Module
 class genericFIRDirectCell[T<:Data:Ring](genIn: T, genOut: T) extends Module {
 	val io = IO(genericFIRCellIO(genIn, genOut))
 	
-	// Passthrough ready
-	io.in.ready := io.out.ready
-	
-	// Delay valid by 1 cycle to propagate with calculation
-	val validReg = Reg(UInt())
-	validReg := io.in.valid
-	io.out.valid := validReg
+    // Registers to delay the input and the valid to propagate with calculations
+    val hasNewData = RegInit(0.U)
+    val inputReg = Reg(genIn)
 
-	// Delay input by 1 cycle to output
-	val inputReg = Reg(genIn)
+    // Passthrough ready
+    io.in.ready := io.out.ready
+	
+    when (io.in.fire()) {
+        hasNewData := 1.U
 	inputReg := io.in.bits.data
-	io.out.bits.data := inputReg
+    }
+	  
+    io.out.valid := hasNewData & io.in.fire()
+    io.out.bits.data := inputReg
 
 	// Compute carry
-	io.out.bits.carry := io.in.bits.data * io.coeff + io.in.bits.carry 
+	io.out.bits.carry := inputReg * io.coeff + io.in.bits.carry 
 }
 
 abstract class GenericFIRBlock[D, U, EO, EI, B<:Data, T<:Data:Ring]
